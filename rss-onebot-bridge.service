@@ -1,0 +1,15 @@
+[Unit]
+Description=RSS to Onebot bridge
+After = network.target
+
+[Service]
+Type=simple
+User=jyi
+Restart=on-failure
+RestartSec=5s
+WorkingDirectory=/srv/rss-onebot-bridge
+EnvironmentFile=/srv/rss-onebot-bridge/settings
+ExecStart=carton exec perl main.pl
+
+[Install]
+WantedBy=multi-user.target
