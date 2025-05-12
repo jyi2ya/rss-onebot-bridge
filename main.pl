@@ -153,9 +153,16 @@ $keywords
 EOF
 }
 
+sub content_ok ($content) {
+    1
+}
+
 sub render_chouxiang (@recent) {
     my $cnt = 0;
-    my $message = join "\n", map {
+    my $message = join "\n",
+    grep {
+        content_ok($_)
+    } map {
         $cnt += 1;
         my $title = make_censored($_->{title});
         "[$cnt] $title"
@@ -177,7 +184,7 @@ sub main {
     $LOG->info("# items got: " . scalar(@items));
 
     my @recent = grep { defined($_->{pub_date}) and $_->{pub_date} + $span > $now } @items;
-    my @contents = map { render_item($_) } @recent;
+    my @contents = grep { content_ok($_) } map { render_item($_) } @recent;
 
     my $chouxiang = render_chouxiang(@recent);
 
