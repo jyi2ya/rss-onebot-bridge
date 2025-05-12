@@ -26,7 +26,7 @@ $SELF_ID
 /;
 
 my $LOCAL_TIME_ZONE = $TIME_ZONE // DateTime::TimeZone->new(name => 'local');
-$ABSTRACT_MAX_LEN //= 300;
+$ABSTRACT_MAX_LEN //= 180;
 $TIMESPAN_HOURS //= 3;
 die unless defined $SELF_ID;
 die unless defined $ONEBOT_ENDPOINT;
@@ -93,6 +93,8 @@ sub parse_feed_item ($item_dom, $channel_title) {
 }
 
 sub parse_feed ($content) {
+    $content = Mojo::Util::trim($content);
+    $content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>$content" unless $content =~ /^\Q<?xml version\E/;
     my $dom = Mojo::DOM->new($content);
     my $channel_title = Mojo::Util::trim($dom->at('title')->text);
     my @result;
@@ -130,7 +132,7 @@ sub fetch_all_items (@links) {
 sub render_item ($item) {
     my $date = $item->{pub_date}->clone;
     $date->set_time_zone($LOCAL_TIME_ZONE);
-    my $link = tiebafy($item->{link});
+    my $link = $item->{link} ? tiebafy($item->{link}) : '';
     my $source = make_censored($item->{source});
     my $title = make_censored($item->{title});
     my $pump_elephant = make_censored($item->{abstract});
@@ -143,10 +145,11 @@ sub render_item ($item) {
     my $rendered = Mojo::Util::trim(<<"EOF");
 【$source】$date
 $title
-$keywords
 $link
 
 $pump_elephant
+
+$keywords
 EOF
 }
 
@@ -165,7 +168,7 @@ $message
 EOF
 }
 
-sub try_push {
+sub main {
     my $now = DateTime->now;
     my $span = DateTime::Duration->new( hours => $TIMESPAN_HOURS );
     my @links = split "\n", Mojo::File::path($RSS_LINK_FILE)->slurp;
@@ -227,13 +230,6 @@ sub try_push {
             },
             json => $send_payload,
         )
-    }
-}
-
-sub main {
-    for (;;) {
-        try_push;
-        sleep $TIMESPAN_HOURS * 3600;
     }
 }
 

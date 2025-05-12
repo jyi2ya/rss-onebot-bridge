@@ -1,3 +1,4 @@
+https://gfw.report/index.xml
 https://www.debian.org/News/news
 https://underdog-daily.pages.dev/feed.rss
 https://rustcc.cn/rss
